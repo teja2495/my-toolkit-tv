@@ -50,11 +50,38 @@ class ToolkitAccessibilityService : AccessibilityService() {
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode != KeyEvent.KEYCODE_HOME) return false
-        if (event.action == KeyEvent.ACTION_UP) {
-            val held = event.eventTime - event.downTime
-            if (held >= LONG_PRESS_MS) performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS) else openToolkit()
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> if (event.repeatCount == 0) {
+                homeLongPressed = false
+                handler.removeCallbacks(homeLongPress)
+                handler.postDelayed(homeLongPress, LONG_PRESS_MS)
+            } else if (event.isLongPress && !homeLongPressed) {
+                handler.removeCallbacks(homeLongPress)
+                homeLongPress.run()
+            }
+            KeyEvent.ACTION_UP -> {
+                handler.removeCallbacks(homeLongPress)
+                if (!homeLongPressed && !event.isCanceled) openToolkit()
+                homeLongPressed = false
+            }
         }
         return true
+    }
+
+    private var homeLongPressed = false
+    private val homeLongPress = Runnable {
+        homeLongPressed = true
+        openSystemPanel()
+    }
+
+    /**
+     * Opens Google TV's own long-press-Home panel (settings, audio output, Bluetooth…).
+     * Its activity needs STATUS_BAR_SERVICE, so go through System UI's quick-settings action,
+     * which Google TV routes to that same panel.
+     */
+    private fun openSystemPanel() {
+        val ok = performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
+        android.util.Log.i("ToolkitHome", "long press: notifications ok=$ok")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
