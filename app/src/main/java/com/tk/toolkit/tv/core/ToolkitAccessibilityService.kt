@@ -76,12 +76,12 @@ class ToolkitAccessibilityService : AccessibilityService() {
 
     /**
      * Opens Google TV's own long-press-Home panel (settings, audio output, Bluetooth…).
-     * Its activity needs STATUS_BAR_SERVICE, so go through System UI's quick-settings action,
-     * which Google TV routes to that same panel.
+     * Its activity needs STATUS_BAR_SERVICE, so go through System UI's notifications action —
+     * the same path the stock long-press Home uses (LONG_PRESS_HOME_NOTIFICATION_PANEL).
+     * GLOBAL_ACTION_QUICK_SETTINGS does nothing on Google TV.
      */
     private fun openSystemPanel() {
-        val ok = performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
-        android.util.Log.i("ToolkitHome", "long press: notifications ok=$ok")
+        performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
